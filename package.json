@@ -1,0 +1,46 @@
+{
+  "name": "ironclad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-Powered Paralegal Assistant for Real Estate Law",
+  "author": "IronClad Team",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@ironclad/web",
+    "dev:api": "turbo run dev --filter=@ironclad/api",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "test:coverage": "turbo run test:coverage",
+    "db:migrate": "pnpm --filter=@ironclad/api prisma migrate dev",
+    "db:migrate:prod": "pnpm --filter=@ironclad/api prisma migrate deploy",
+    "db:seed": "pnpm --filter=@ironclad/api prisma db seed",
+    "db:studio": "pnpm --filter=@ironclad/api prisma studio",
+    "db:generate": "pnpm --filter=@ironclad/api prisma generate",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prettier": "^3.4.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@types/react",
+        "react",
+        "react-dom"
+      ]
+    }
+  }
+}

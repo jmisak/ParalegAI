@@ -1,0 +1,72 @@
+# Trivy Ignore File
+# https://aquasecurity.github.io/trivy/latest/docs/vulnerability/examples/filter/
+
+# =============================================================================
+# VULNERABILITY IGNORES
+# =============================================================================
+# Format: CVE-XXXX-XXXXX or GHSA-xxxx-xxxx-xxxx
+# Include comment explaining why the vulnerability is being ignored
+
+# Example: Low severity, no fix available, not exploitable in our context
+# CVE-2024-XXXXX
+
+# =============================================================================
+# SECRET DETECTION IGNORES
+# =============================================================================
+# Format: Path patterns or specific file paths
+
+# Test fixtures with dummy credentials
+tests/fixtures/mock-credentials.json
+
+# Example files (contain placeholder values only)
+.env.example
+.env.development.example
+.env.production.example
+
+# Documentation with example values
+docs/**/*.md
+
+# =============================================================================
+# MISCONFIGURATION IGNORES
+# =============================================================================
+# Format: Check IDs
+
+# DS002 - Image user is 'root'
+# Ignored for build stages only, production images run as non-root
+# DS002
+
+# =============================================================================
+# LICENSE IGNORES
+# =============================================================================
+# Format: Package names
+
+# Development-only packages with GPL
+# pkg:npm/some-dev-tool
+
+# =============================================================================
+# PATH IGNORES
+# =============================================================================
+# These paths are excluded from all scans
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+
+# Dependencies (scanned separately)
+node_modules/
+
+# IDE files
+.idea/
+.vscode/
+
+# Git internals
+.git/
+
+# Test snapshots
+__snapshots__/
+
+# Generated files
+*.generated.*
+*.d.ts

@@ -5,8 +5,12 @@
   "description": "AI-Powered Paralegal Assistant for Real Estate Law",
   "author": "IronClad Team",
   "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "engines": {
-    "node": ">=22.0.0",
+    "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.15.0",
@@ -18,8 +22,14 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:unit": "turbo run test --filter=!*e2e*",
+    "test:watch": "turbo run test:watch",
     "test:e2e": "turbo run test:e2e",
+    "test:e2e:api": "pnpm --filter=@ironclad/api test:e2e",
+    "test:e2e:web": "pnpm --filter=@ironclad/web test:e2e",
     "test:coverage": "turbo run test:coverage",
+    "test:changed": "turbo run test --filter=[HEAD^1]",
+    "test:ci": "pnpm test:coverage && pnpm test:e2e",
     "db:migrate": "pnpm --filter=@ironclad/api prisma migrate dev",
     "db:migrate:prod": "pnpm --filter=@ironclad/api prisma migrate deploy",
     "db:seed": "pnpm --filter=@ironclad/api prisma db seed",
@@ -29,7 +39,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^20.0.0",
     "prettier": "^3.4.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"

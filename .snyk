@@ -1,0 +1,106 @@
+# Snyk Security Configuration
+# https://docs.snyk.io/snyk-cli/commands/ignore
+
+version: v1.0.0
+
+# Patch instructions for known vulnerabilities
+patch: {}
+
+# Ignore rules for false positives or accepted risks
+ignore:
+  # Example: Ignore a specific vulnerability for a limited time
+  # 'SNYK-JS-EXAMPLE-123456':
+  #   - '*':
+  #       reason: 'Accepted risk - no sensitive data processed by this component'
+  #       expires: '2026-05-02T00:00:00.000Z'
+
+# Exclude paths from scanning
+exclude:
+  global:
+    # Build outputs
+    - '**/dist/**'
+    - '**/build/**'
+    - '**/.next/**'
+
+    # Test fixtures and mocks
+    - '**/test/fixtures/**'
+    - '**/__mocks__/**'
+    - '**/cypress/fixtures/**'
+
+    # Documentation
+    - '**/docs/**'
+
+    # IDE and editor files
+    - '**/.idea/**'
+    - '**/.vscode/**'
+
+    # Git hooks samples
+    - '**/.git/hooks/*.sample'
+
+# Severity thresholds for failing builds
+# Set to 'high' to only fail on high/critical vulnerabilities
+fail-on: high
+
+# License compliance
+license:
+  # Deny these licenses
+  deny:
+    - GPL-3.0
+    - AGPL-3.0
+    - LGPL-3.0
+
+  # Allow these licenses explicitly
+  allow:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - CC0-1.0
+    - Unlicense
+
+# Project-specific settings
+settings:
+  # Organization for Snyk reports
+  org: ironclad
+
+  # Scan dev dependencies
+  dev: true
+
+  # Test all projects in monorepo
+  all-projects: true
+
+  # Scan for code issues (SAST)
+  code: true
+
+  # Scan container images
+  container: false
+
+  # Scan IaC files
+  iac: true
+
+# CI/CD integration settings
+ci:
+  # Auto-fix PRs
+  auto-fix-prs:
+    enabled: true
+    # Only for non-major upgrades
+    upgrade-type: patch
+
+  # PR checks
+  pr-checks:
+    enabled: true
+    fail-only-for-issues-with-fix: false
+    severity-threshold: high
+
+# Notifications
+notifications:
+  # Notify on new vulnerabilities
+  new-vulns:
+    enabled: true
+    # Minimum severity to notify
+    severity: medium
+
+  # Weekly report
+  weekly-report:
+    enabled: true

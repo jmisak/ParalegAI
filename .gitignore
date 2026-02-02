@@ -47,9 +47,27 @@ prisma/migrations/.migration_lock.toml
 # Secrets (NEVER commit)
 *.pem
 *.key
+*.p12
+*.pfx
+*.jks
+*.keystore
 credentials.json
 secrets.json
 service-account.json
+.env.production
+.env.staging
+*.secret
+*-secret.*
+*_secret.*
+.secrets/
+vault-token
+.vault-token
+
+# Security scanning results (may contain sensitive info)
+snyk-results.json
+trivy-results.json
+security-scan-*.json
+vulnerability-*.json
 
 # OS files
 Thumbs.db

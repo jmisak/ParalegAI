@@ -1,0 +1,247 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  validate-pr:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate PR title (Conventional Commits)
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" found in the pull request title "{title}"
+            should start with a lowercase letter.
+          headerPattern: ^(\w+)(?:\(([^)]+)\))?!?: (.+)$
+          headerPatternCorrespondence: type, scope, subject
+
+      - name: Check PR description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Check minimum description length
+            const minLength = 50;
+            const strippedBody = body.replace(/<!--[\s\S]*?-->/g, '').trim();
+
+            if (strippedBody.length < minLength) {
+              core.setFailed(`PR description must be at least ${minLength} characters. Current: ${strippedBody.length}`);
+              return;
+            }
+
+            // Check for required sections
+            const requiredSections = ['## Summary', '## Test Plan'];
+            const missingSections = requiredSections.filter(section =>
+              !body.toLowerCase().includes(section.toLowerCase())
+            );
+
+            if (missingSections.length > 0) {
+              core.setFailed(`PR description is missing required sections: ${missingSections.join(', ')}`);
+              return;
+            }
+
+            console.log('PR description validation passed');
+
+  lint-commits:
+    name: Lint Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install commitlint
+        run: |
+          pnpm add -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate commits
+        run: |
+          echo "module.exports = { extends: ['@commitlint/config-conventional'] };" > commitlint.config.js
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  label-pr:
+    name: Auto Label PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Label based on files changed
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
+      - name: Add size labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });
+
+            const changes = files.reduce((sum, file) => sum + file.additions + file.deletions, 0);
+
+            let sizeLabel;
+            if (changes < 10) sizeLabel = 'size/XS';
+            else if (changes < 50) sizeLabel = 'size/S';
+            else if (changes < 200) sizeLabel = 'size/M';
+            else if (changes < 500) sizeLabel = 'size/L';
+            else sizeLabel = 'size/XL';
+
+            // Remove existing size labels
+            const existingLabels = context.payload.pull_request.labels
+              .filter(l => l.name.startsWith('size/'))
+              .map(l => l.name);
+
+            for (const label of existingLabels) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                name: label
+              }).catch(() => {});
+            }
+
+            // Add new size label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: [sizeLabel]
+            });
+
+            console.log(`Added label: ${sizeLabel} (${changes} changes)`);
+
+  assign-reviewers:
+    name: Auto Assign Reviewers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Auto assign reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            // Get files changed
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            const reviewers = new Set();
+
+            // Assign based on file paths
+            for (const file of files) {
+              if (file.filename.startsWith('apps/api/')) {
+                reviewers.add('backend-team');
+              }
+              if (file.filename.startsWith('apps/web/')) {
+                reviewers.add('frontend-team');
+              }
+              if (file.filename.includes('prisma/')) {
+                reviewers.add('database-team');
+              }
+              if (file.filename.startsWith('.github/')) {
+                reviewers.add('devops-team');
+              }
+              if (file.filename.includes('security') || file.filename.includes('auth')) {
+                reviewers.add('security-team');
+              }
+            }
+
+            // Remove author from reviewers
+            reviewers.delete(author);
+
+            if (reviewers.size > 0) {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  team_reviewers: Array.from(reviewers)
+                });
+                console.log(`Requested review from: ${Array.from(reviewers).join(', ')}`);
+              } catch (error) {
+                console.log(`Could not assign team reviewers: ${error.message}`);
+              }
+            }
+
+  check-conflicts:
+    name: Check Merge Conflicts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check for merge conflicts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            if (pr.mergeable === false) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: ':warning: This PR has merge conflicts that must be resolved before merging.'
+              });
+              core.setFailed('PR has merge conflicts');
+            } else if (pr.mergeable === null) {
+              console.log('Mergeability not yet determined');
+            } else {
+              console.log('No merge conflicts detected');
+            }

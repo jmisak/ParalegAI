@@ -1,0 +1,33 @@
+name: "IRONCLAD CodeQL Configuration"
+
+# Specify the languages to analyze
+languages:
+  - javascript-typescript
+
+# Use extended security queries
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Paths to include in analysis
+paths:
+  - apps
+  - packages
+  - src
+
+# Paths to exclude from analysis
+paths-ignore:
+  - node_modules
+  - dist
+  - .next
+  - coverage
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/test/**'
+  - '**/__tests__/**'
+  - '**/__mocks__/**'
+
+# Query filters - adjust severity thresholds
+query-filters:
+  - exclude:
+      problem.severity: recommendation

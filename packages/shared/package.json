@@ -1,0 +1,91 @@
+{
+  "name": "@ironclad/shared",
+  "version": "0.1.0",
+  "description": "Shared types, constants, and utilities for IronClad",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./types": {
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/types/index.mjs"
+      },
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/types/index.js"
+      }
+    },
+    "./constants": {
+      "import": {
+        "types": "./dist/constants/index.d.ts",
+        "default": "./dist/constants/index.mjs"
+      },
+      "require": {
+        "types": "./dist/constants/index.d.ts",
+        "default": "./dist/constants/index.js"
+      }
+    },
+    "./utils": {
+      "import": {
+        "types": "./dist/utils/index.d.ts",
+        "default": "./dist/utils/index.mjs"
+      },
+      "require": {
+        "types": "./dist/utils/index.d.ts",
+        "default": "./dist/utils/index.js"
+      }
+    },
+    "./enums": {
+      "import": {
+        "types": "./dist/enums/index.d.ts",
+        "default": "./dist/enums/index.mjs"
+      },
+      "require": {
+        "types": "./dist/enums/index.d.ts",
+        "default": "./dist/enums/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

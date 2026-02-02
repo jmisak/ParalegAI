@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+jobs:
+  ci:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Cache turbo build
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm db:generate
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm typecheck
+
+      - name: Run build
+        run: pnpm build
+
+      - name: Run unit tests with coverage
+        run: pnpm test:coverage
+
+      - name: Upload API coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./apps/api/coverage/lcov.info
+          flags: api
+          name: api-coverage
+          fail_ci_if_error: false
+
+      - name: Upload Web coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./apps/web/coverage/lcov.info
+          flags: web
+          name: web-coverage
+          fail_ci_if_error: false
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          name: build-artifacts
+          path: |
+            apps/api/dist
+            apps/web/.next
+          retention-days: 7

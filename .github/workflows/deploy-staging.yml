@@ -1,0 +1,208 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/ironclad
+
+jobs:
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      api-image: ${{ steps.meta-api.outputs.tags }}
+      web-image: ${{ steps.meta-web.outputs.tags }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for API
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-api
+          tags: |
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest
+
+      - name: Extract metadata for Web
+        id: meta-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-web
+          tags: |
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=staging
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=staging
+
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: staging
+      url: https://staging.ironclad.app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.STAGING_KUBECONFIG }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/ironclad-api \
+            api=${{ needs.build.outputs.api-image }} \
+            -n ironclad-staging
+
+          kubectl set image deployment/ironclad-web \
+            web=${{ needs.build.outputs.web-image }} \
+            -n ironclad-staging
+
+          kubectl rollout status deployment/ironclad-api -n ironclad-staging --timeout=300s
+          kubectl rollout status deployment/ironclad-web -n ironclad-staging --timeout=300s
+
+  smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: Run health check
+        run: |
+          response=$(curl -sf https://staging-api.ironclad.app/health || echo "failed")
+          if [ "$response" = "failed" ]; then
+            echo "Health check failed"
+            exit 1
+          fi
+          echo "Health check passed: $response"
+
+      - name: Run smoke tests
+        env:
+          STAGING_URL: https://staging.ironclad.app
+          API_URL: https://staging-api.ironclad.app
+        run: |
+          # Basic API smoke tests
+          curl -sf "$API_URL/health" | jq .
+          curl -sf "$API_URL/api/v1/status" | jq .
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [build, deploy, smoke-tests]
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: ${{ needs.smoke-tests.result == 'success' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "Staging deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *IRONCLAD Staging Deployment Successful*\n\nCommit: `${{ github.sha }}`\nBranch: `${{ github.ref_name }}`\nURL: https://staging.ironclad.app"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify on failure
+        if: ${{ needs.smoke-tests.result == 'failure' || needs.deploy.result == 'failure' }}
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "Staging deployment failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *IRONCLAD Staging Deployment Failed*\n\nCommit: `${{ github.sha }}`\nBranch: `${{ github.ref_name }}`\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

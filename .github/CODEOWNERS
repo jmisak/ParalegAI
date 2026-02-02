@@ -1,0 +1,73 @@
+# =============================================================================
+# IRONCLAD CODEOWNERS
+# =============================================================================
+# This file defines code ownership for automated review assignment.
+# Order matters: later patterns override earlier ones.
+#
+# Documentation: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Default owners (fallback for any unmatched files)
+# -----------------------------------------------------------------------------
+*                                   @ironclad/core-team
+
+# -----------------------------------------------------------------------------
+# Backend / API
+# -----------------------------------------------------------------------------
+/apps/api/                          @ironclad/backend-team
+/apps/api/src/modules/auth/         @ironclad/backend-team @ironclad/security-team
+/apps/api/prisma/                   @ironclad/backend-team @ironclad/database-team
+
+# -----------------------------------------------------------------------------
+# Frontend / Web
+# -----------------------------------------------------------------------------
+/apps/web/                          @ironclad/frontend-team
+/apps/web/src/components/           @ironclad/frontend-team @ironclad/design-team
+/apps/web/src/styles/               @ironclad/design-team
+
+# -----------------------------------------------------------------------------
+# Shared Packages
+# -----------------------------------------------------------------------------
+/packages/                          @ironclad/core-team
+/packages/ui/                       @ironclad/frontend-team @ironclad/design-team
+/packages/shared/                   @ironclad/core-team
+
+# -----------------------------------------------------------------------------
+# Infrastructure / DevOps
+# -----------------------------------------------------------------------------
+/.github/                           @ironclad/devops-team
+/docker-compose*.yml                @ironclad/devops-team
+**/Dockerfile                       @ironclad/devops-team
+/.github/workflows/                 @ironclad/devops-team @ironclad/security-team
+
+# -----------------------------------------------------------------------------
+# Configuration Files
+# -----------------------------------------------------------------------------
+/package.json                       @ironclad/core-team
+/pnpm-workspace.yaml                @ironclad/core-team
+/turbo.json                         @ironclad/core-team
+/tsconfig.json                      @ironclad/core-team
+
+# -----------------------------------------------------------------------------
+# Security-sensitive files
+# -----------------------------------------------------------------------------
+**/auth/**                          @ironclad/security-team
+**/security/**                      @ironclad/security-team
+**/.env.example                     @ironclad/security-team
+**/middleware/auth*                 @ironclad/security-team
+
+# -----------------------------------------------------------------------------
+# Documentation
+# -----------------------------------------------------------------------------
+/docs/                              @ironclad/docs-team
+*.md                                @ironclad/docs-team
+/CLAUDE.md                          @ironclad/core-team
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
+**/*.test.ts                        @ironclad/qa-team
+**/*.spec.ts                        @ironclad/qa-team
+**/test/                            @ironclad/qa-team
+**/__tests__/                       @ironclad/qa-team

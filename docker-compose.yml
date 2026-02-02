@@ -1,0 +1,188 @@
+# =============================================================================
+# IRONCLAD - Development Docker Compose
+# =============================================================================
+# Usage:
+#   docker-compose up -d          # Start all services
+#   docker-compose up -d postgres # Start only postgres
+#   docker-compose logs -f api    # Follow API logs
+#   docker-compose down -v        # Stop and remove volumes
+# =============================================================================
+
+name: ironclad
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: ironclad-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ironclad
+      POSTGRES_PASSWORD: ironclad_dev_password
+      POSTGRES_DB: ironclad
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ironclad -d ironclad"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ironclad-network
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache & Queue
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: ironclad-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ironclad-network
+
+  # ---------------------------------------------------------------------------
+  # API Service (Development)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: builder
+    container_name: ironclad-api
+    restart: unless-stopped
+    working_dir: /app/apps/api
+    command: pnpm dev
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://ironclad:ironclad_dev_password@postgres:5432/ironclad?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      JWT_EXPIRATION: 7d
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+      - "9229:9229"  # Debug port
+    volumes:
+      - ./apps/api/src:/app/apps/api/src:ro
+      - ./apps/api/prisma:/app/apps/api/prisma
+      - ./packages:/app/packages:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - ironclad-network
+
+  # ---------------------------------------------------------------------------
+  # Web Service (Development)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: builder
+    container_name: ironclad-web
+    restart: unless-stopped
+    working_dir: /app/apps/web
+    command: pnpm dev
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src:ro
+      - ./apps/web/public:/app/apps/web/public:ro
+      - ./packages:/app/packages:ro
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - ironclad-network
+
+  # ---------------------------------------------------------------------------
+  # Mailhog - Email Testing
+  # ---------------------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ironclad-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - ironclad-network
+
+  # ---------------------------------------------------------------------------
+  # MinIO - S3 Compatible Storage (Development)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: ironclad-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ironclad
+      MINIO_ROOT_PASSWORD: ironclad_minio_secret
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - ironclad-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  ironclad-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local

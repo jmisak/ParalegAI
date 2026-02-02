@@ -1,0 +1,254 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  dependency-audit:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run pnpm audit
+        run: |
+          pnpm audit --json > audit-results.json || true
+
+          # Parse and display results
+          HIGH_VULNS=$(cat audit-results.json | jq '.metadata.vulnerabilities.high // 0')
+          CRITICAL_VULNS=$(cat audit-results.json | jq '.metadata.vulnerabilities.critical // 0')
+
+          echo "High vulnerabilities: $HIGH_VULNS"
+          echo "Critical vulnerabilities: $CRITICAL_VULNS"
+
+          if [ "$CRITICAL_VULNS" -gt 0 ]; then
+            echo "::error::Critical vulnerabilities found!"
+            cat audit-results.json | jq '.advisories | to_entries[] | select(.value.severity == "critical")'
+            exit 1
+          fi
+
+          if [ "$HIGH_VULNS" -gt 5 ]; then
+            echo "::warning::Multiple high severity vulnerabilities found"
+          fi
+
+      - name: Upload audit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-results
+          path: audit-results.json
+          retention-days: 30
+
+  codeql-analysis:
+    name: CodeQL SAST Analysis
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: .github/codeql-config.yml
+          queries: +security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || github.event.before }}
+          head: ${{ github.event.pull_request.head.sha || github.sha }}
+          extra_args: --only-verified
+
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install license-checker
+        run: pnpm add -g license-checker
+
+      - name: Check licenses
+        run: |
+          # Allowed licenses
+          ALLOWED="MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;0BSD;Unlicense;WTFPL;CC-BY-3.0;CC-BY-4.0"
+
+          # Run license check
+          npx license-checker --onlyAllow "$ALLOWED" --summary || {
+            echo "::error::Found packages with disallowed licenses"
+            npx license-checker --onlyAllow "$ALLOWED" --csv
+            exit 1
+          }
+
+          echo "All licenses are compliant"
+
+      - name: Generate license report
+        run: |
+          npx license-checker --json > licenses.json
+          npx license-checker --csv > licenses.csv
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            licenses.json
+            licenses.csv
+          retention-days: 90
+
+  container-scan:
+    name: Container Vulnerability Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build API image for scanning
+        run: |
+          docker build -t ironclad-api:scan -f apps/api/Dockerfile .
+
+      - name: Run Trivy vulnerability scanner on API
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ironclad-api:scan'
+          format: 'sarif'
+          output: 'trivy-api-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Build Web image for scanning
+        run: |
+          docker build -t ironclad-web:scan -f apps/web/Dockerfile .
+
+      - name: Run Trivy vulnerability scanner on Web
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ironclad-web:scan'
+          format: 'sarif'
+          output: 'trivy-web-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: '.'
+          category: 'container-scanning'
+
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, codeql-analysis, secret-scanning, license-compliance]
+    if: always() && github.event_name == 'schedule'
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Generate consolidated report
+        run: |
+          echo "# Weekly Security Report" > security-report.md
+          echo "Generated: $(date -u)" >> security-report.md
+          echo "" >> security-report.md
+
+          echo "## Dependency Audit" >> security-report.md
+          if [ -f audit-results/audit-results.json ]; then
+            echo '```json' >> security-report.md
+            cat audit-results/audit-results.json | jq '.metadata' >> security-report.md
+            echo '```' >> security-report.md
+          fi
+
+          echo "" >> security-report.md
+          echo "## License Compliance" >> security-report.md
+          if [ -f license-report/licenses.csv ]; then
+            echo "License report generated successfully" >> security-report.md
+          fi
+
+      - name: Create issue for security findings
+        uses: actions/github-script@v7
+        if: failure()
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Security Scan Findings - ${new Date().toISOString().split('T')[0]}`,
+              body: 'The weekly security scan found issues that require attention. Please review the workflow run for details.',
+              labels: ['security', 'automated']
+            });

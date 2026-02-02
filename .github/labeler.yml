@@ -1,0 +1,79 @@
+# Label configuration for actions/labeler
+
+# API changes
+api:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/api/**/*'
+
+# Web/Frontend changes
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/web/**/*'
+
+# Database changes
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/prisma/**/*'
+          - '**/*.prisma'
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**/*'
+
+# CI/CD changes
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/**/*'
+          - '**/Dockerfile'
+          - 'docker-compose*.yml'
+
+# Dependencies
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/package.json'
+          - '**/pnpm-lock.yaml'
+
+# Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.config.js'
+          - '**/*.config.ts'
+          - '**/tsconfig.json'
+          - '.env.example'
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.test.ts'
+          - '**/*.spec.ts'
+          - '**/test/**/*'
+          - '**/__tests__/**/*'
+
+# Security related
+security:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/auth/**/*'
+          - '**/security/**/*'
+          - '**/middleware/auth*'
+
+# Shared packages
+packages:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/**/*'
+
+# UI Components
+ui:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/components/**/*'
+          - '**/*.css'
+          - '**/*.scss'

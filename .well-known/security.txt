@@ -1,0 +1,59 @@
+# IRONCLAD Security Contact Information
+# RFC 9116 Compliant security.txt
+# https://securitytxt.org/
+
+# Security contact email
+Contact: mailto:security@ironclad.app
+
+# Encryption key for secure communication
+# Encryption: https://ironclad.app/.well-known/pgp-key.txt
+
+# Security policy
+Policy: https://ironclad.app/security/policy
+
+# Acknowledgments page for security researchers
+Acknowledgments: https://ironclad.app/security/acknowledgments
+
+# Preferred languages
+Preferred-Languages: en
+
+# Canonical URL for this file
+Canonical: https://ironclad.app/.well-known/security.txt
+
+# Expiration date (update annually)
+Expires: 2027-02-02T00:00:00.000Z
+
+# Hiring security professionals
+Hiring: https://ironclad.app/careers
+
+# =============================================================================
+# VULNERABILITY DISCLOSURE POLICY
+# =============================================================================
+#
+# We take security seriously. If you discover a security vulnerability,
+# please report it responsibly.
+#
+# What we ask:
+# - Report vulnerabilities to security@ironclad.app
+# - Provide sufficient detail to reproduce the issue
+# - Give us reasonable time to fix before public disclosure
+# - Do not access, modify, or delete data belonging to others
+# - Do not perform denial of service attacks
+#
+# What we offer:
+# - Acknowledgment of your report within 24 hours
+# - Regular updates on remediation progress
+# - Credit in our security acknowledgments (if desired)
+# - Safe harbor for good-faith security research
+#
+# Scope:
+# - ironclad.app and all subdomains
+# - IRONCLAD API endpoints
+# - IRONCLAD mobile applications
+#
+# Out of scope:
+# - Social engineering attacks
+# - Physical security
+# - Third-party services
+#
+# =============================================================================

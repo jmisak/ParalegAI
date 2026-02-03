@@ -1,12 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsString,
   MinLength,
   MaxLength,
   Matches,
-  IsOptional,
-  IsUUID,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -52,11 +50,6 @@ export class RegisterDto {
   @MaxLength(100)
   lastName: string;
 
-  @ApiPropertyOptional({
-    description: 'Organization ID to join (optional for new org creation)',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  @IsOptional()
-  @IsUUID()
-  organizationId?: string;
+  // organizationId intentionally removed from public DTO.
+  // Tenant assignment is handled by admin invitation flow only.
 }

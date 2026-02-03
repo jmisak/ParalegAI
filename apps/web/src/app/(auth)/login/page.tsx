@@ -21,7 +21,7 @@ export default function LoginPage() {
 
     try {
       await login({ email, password });
-      router.push('/dashboard/matters');
+      // Redirect is handled by the auth provider (dashboard or MFA verify)
     } catch {
       setError('Invalid email or password. Please try again.');
     }

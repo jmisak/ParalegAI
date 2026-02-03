@@ -211,4 +211,20 @@ describe('queryKeys', () => {
       'client-1',
     ]);
   });
+
+  it('should generate template keys', () => {
+    expect(queryKeys.templates.all).toEqual(['templates']);
+    expect(queryKeys.templates.lists()).toEqual(['templates', 'list']);
+    expect(queryKeys.templates.list({ category: 'deed' })).toEqual([
+      'templates',
+      'list',
+      { category: 'deed' },
+    ]);
+    expect(queryKeys.templates.details()).toEqual(['templates', 'detail']);
+    expect(queryKeys.templates.detail('tpl-1')).toEqual([
+      'templates',
+      'detail',
+      'tpl-1',
+    ]);
+  });
 });

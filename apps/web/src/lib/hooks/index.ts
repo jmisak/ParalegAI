@@ -21,3 +21,19 @@ export {
   type DocumentFilters,
   type UploadDocumentInput,
 } from './use-documents';
+export {
+  useTemplates,
+  useTemplate,
+  useCreateTemplate,
+  useRenderTemplate,
+  getCategoryLabel,
+  categoryColors,
+  TEMPLATE_CATEGORIES,
+  type Template,
+  type TemplateCategory,
+  type TemplateVariable,
+  type TemplateFilters,
+  type CreateTemplateInput,
+  type RenderTemplateInput,
+  type RenderTemplateOutput,
+} from './use-templates';

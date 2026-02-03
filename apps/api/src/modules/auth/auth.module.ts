@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { SessionService } from './session.service';
+import { MfaService, MfaController } from './mfa';
+import { AbacService, AbacGuard } from './abac';
 
 @Module({
   imports: [
@@ -24,8 +26,16 @@ import { SessionService } from './session.service';
       inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, SessionService, JwtStrategy, LocalStrategy],
-  exports: [AuthService, SessionService, JwtModule],
+  controllers: [AuthController, MfaController],
+  providers: [
+    AuthService,
+    SessionService,
+    JwtStrategy,
+    LocalStrategy,
+    MfaService,
+    AbacService,
+    AbacGuard,
+  ],
+  exports: [AuthService, SessionService, JwtModule, MfaService, AbacService, AbacGuard],
 })
 export class AuthModule {}

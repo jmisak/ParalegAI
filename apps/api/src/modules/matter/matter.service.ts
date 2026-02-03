@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { MatterRepository } from './matter.repository';
 import {
   CreateMatterDto,
@@ -89,7 +89,7 @@ export class MatterService {
     const updated = await this.matterRepository.update(id, {
       ...dto,
       updatedBy: userId,
-    });
+    }, organizationId);
 
     return this.toResponseDto(updated);
   }
@@ -101,7 +101,7 @@ export class MatterService {
     // Verify matter exists
     await this.findOne(id, organizationId);
 
-    await this.matterRepository.softDelete(id, userId);
+    await this.matterRepository.softDelete(id, userId, organizationId);
   }
 
   /**
@@ -120,6 +120,7 @@ export class MatterService {
       matterId,
       userIds,
       assignedBy,
+      organizationId,
     );
 
     return this.toResponseDto(updated);
@@ -132,7 +133,83 @@ export class MatterService {
     // Verify matter exists
     await this.findOne(matterId, organizationId);
 
-    return this.matterRepository.getActivityHistory(matterId);
+    return this.matterRepository.getActivityHistory(matterId, organizationId);
+  }
+
+  /**
+   * Check for conflicts of interest before adding parties
+   *
+   * @param partyIds - Party IDs to check
+   * @param organizationId - Tenant organization
+   * @param excludeMatterId - Matter to exclude (for updates)
+   * @returns Conflict details if any exist
+   */
+  async checkConflicts(
+    partyIds: string[],
+    organizationId: string,
+    excludeMatterId?: string,
+  ) {
+    const conflicts = await this.matterRepository.checkConflicts(
+      partyIds,
+      organizationId,
+      excludeMatterId,
+    );
+
+    return {
+      hasConflicts: conflicts.length > 0,
+      conflicts: conflicts.map((c) => ({
+        matterId: c['matter_id'],
+        matterTitle: c['matter_title'],
+        partyId: c['party_id'],
+        partyName: c['party_name'],
+        role: c['party_role'],
+      })),
+    };
+  }
+
+  /**
+   * Add parties to a matter with conflict checking
+   *
+   * @throws ConflictException if conflicts are detected
+   */
+  async addParties(
+    matterId: string,
+    parties: Array<{ partyId: string; role: string }>,
+    organizationId: string,
+    skipConflictCheck = false,
+  ) {
+    // Verify matter exists
+    await this.findOne(matterId, organizationId);
+
+    if (!skipConflictCheck) {
+      const partyIds = parties.map((p) => p.partyId);
+      const conflictResult = await this.checkConflicts(
+        partyIds,
+        organizationId,
+        matterId,
+      );
+
+      if (conflictResult.hasConflicts) {
+        throw new ConflictException({
+          message: 'Conflict of interest detected',
+          conflicts: conflictResult.conflicts,
+        });
+      }
+    }
+
+    await this.matterRepository.addParties(matterId, parties, organizationId);
+
+    return this.findOne(matterId, organizationId);
+  }
+
+  /**
+   * Get parties for a matter
+   */
+  async getParties(matterId: string, organizationId: string) {
+    // Verify matter exists
+    await this.findOne(matterId, organizationId);
+
+    return this.matterRepository.getParties(matterId, organizationId);
   }
 
   /**

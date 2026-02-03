@@ -142,4 +142,14 @@ export const queryKeys = {
     details: () => [...queryKeys.clients.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.clients.details(), id] as const,
   },
+
+  // Templates
+  templates: {
+    all: ['templates'] as const,
+    lists: () => [...queryKeys.templates.all, 'list'] as const,
+    list: (filters?: Record<string, unknown>) =>
+      [...queryKeys.templates.lists(), filters] as const,
+    details: () => [...queryKeys.templates.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.templates.details(), id] as const,
+  },
 };

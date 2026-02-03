@@ -62,11 +62,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (credentials: LoginCredentials) => {
       setIsLoading(true);
       try {
-        const response = await api.post<{ user: User; token: string }>(
-          '/auth/login',
-          credentials
-        );
-        setUser(response.user);
+        const response = await api.post<{
+          accessToken: string;
+          refreshToken: string;
+          mfaRequired?: boolean;
+          mfaToken?: string;
+        }>('/auth/login', credentials);
+
+        if (response.mfaRequired && response.mfaToken) {
+          // Store MFA token for the verify page to use
+          sessionStorage.setItem('mfa_token', response.mfaToken);
+          router.push('/verify-mfa');
+          return;
+        }
+
+        // Full login — fetch user profile
+        const profile = await api.get<User>('/auth/me');
+        setUser(profile);
         router.push('/dashboard/matters');
       } finally {
         setIsLoading(false);

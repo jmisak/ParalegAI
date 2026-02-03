@@ -88,9 +88,11 @@ export default function MatterDetailPage({
           >
             {statusLabels[matter.status] ?? matter.status}
           </span>
-          <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/matters/${id}/edit`}>
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Link>
           </Button>
           <Button variant="ghost" size="sm">
             <MoreHorizontal className="w-4 h-4" />

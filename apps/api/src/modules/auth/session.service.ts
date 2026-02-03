@@ -68,8 +68,10 @@ export class SessionService {
     const ttlSeconds = this.absoluteTimeoutHours * 3600;
     await this.redis.setex(sessionId, ttlSeconds, JSON.stringify(sessionData));
 
-    // Add to user's session set
-    await this.redis.sadd(`user:${userId}:sessions`, sessionId);
+    // Add to user's session set with same TTL as absolute timeout
+    const setKey = `user:${userId}:sessions`;
+    await this.redis.sadd(setKey, sessionId);
+    await this.redis.expire(setKey, ttlSeconds);
   }
 
   /**

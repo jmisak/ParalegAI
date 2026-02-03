@@ -85,12 +85,17 @@ export class TenantGuard implements CanActivate {
         features: org[0].features || [],
       };
     } catch {
-      // Table might not exist yet during initial setup
-      // Return minimal context for development
+      // In production, fail closed — deny access if tenant lookup fails
+      // In development, return minimal context so the app is usable before seeding
+      const nodeEnv = process.env.NODE_ENV || 'development';
+      if (nodeEnv === 'production') {
+        return null;
+      }
+
       return {
         organizationId,
         organizationName: 'Development Org',
-        subscriptionTier: 'enterprise',
+        subscriptionTier: 'professional' as TenantContext['subscriptionTier'],
         features: [],
       };
     }

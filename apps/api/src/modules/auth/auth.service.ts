@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../../prisma/prisma.service';
 import { SessionService } from './session.service';
+import { MfaService } from './mfa/mfa.service';
 import { JwtPayload } from '@common/interfaces';
 import { RegisterDto, TokenResponseDto } from './dto';
 
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly sessionService: SessionService,
+    private readonly mfaService: MfaService,
   ) {}
 
   /**
@@ -74,15 +76,117 @@ export class AuthService {
         sessionId: '', // Will be set during login
       };
     } catch (error) {
-      this.logger.error('Failed to validate user', error);
+      this.logger.error(
+        `Failed to validate user: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return null;
     }
   }
 
   /**
-   * Generate tokens and create session
+   * Generate tokens and create session.
+   * If user has MFA enabled, returns an mfaToken instead of full access.
    */
   async login(user: JwtPayload): Promise<TokenResponseDto> {
+    // Check if user has MFA enabled
+    const mfaEnabled = await this.mfaService.isMfaEnabled(user.sub);
+
+    if (mfaEnabled) {
+      // Return a short-lived MFA challenge token instead of full access
+      const mfaToken = this.jwtService.sign(
+        { sub: user.sub, type: 'mfa_challenge' },
+        { expiresIn: '5m' },
+      );
+
+      return {
+        accessToken: '',
+        refreshToken: '',
+        expiresIn: 0,
+        tokenType: 'Bearer',
+        mfaRequired: true,
+        mfaToken,
+      };
+    }
+
+    return this.issueTokens(user);
+  }
+
+  /**
+   * Verify MFA code and issue full tokens
+   */
+  async verifyMfaLogin(
+    mfaToken: string,
+    code: string,
+    type: 'totp' | 'backup',
+  ): Promise<TokenResponseDto> {
+    // Validate the MFA challenge token
+    let payload: { sub: string; type: string };
+    try {
+      payload = this.jwtService.verify(mfaToken);
+    } catch {
+      throw new UnauthorizedException('MFA challenge expired or invalid');
+    }
+
+    if (payload.type !== 'mfa_challenge') {
+      throw new UnauthorizedException('Invalid MFA token');
+    }
+
+    // Verify the code
+    let isValid: boolean;
+    if (type === 'backup') {
+      isValid = await this.mfaService.verifyBackupCode(payload.sub, code);
+    } else {
+      isValid = await this.mfaService.verifyCode(payload.sub, code);
+    }
+
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid verification code');
+    }
+
+    // Fetch full user data and issue tokens
+    const users = await this.prisma.$queryRaw<
+      Array<{
+        id: string;
+        email: string;
+        organization_id: string;
+        roles: string[];
+        permissions: string[];
+      }>
+    >`
+      SELECT u.id, u.email, u.organization_id,
+             COALESCE(array_agg(DISTINCT r.name) FILTER (WHERE r.name IS NOT NULL), '{}') as roles,
+             COALESCE(array_agg(DISTINCT p.name) FILTER (WHERE p.name IS NOT NULL), '{}') as permissions
+      FROM users u
+      LEFT JOIN user_roles ur ON u.id = ur.user_id
+      LEFT JOIN roles r ON ur.role_id = r.id
+      LEFT JOIN role_permissions rp ON r.id = rp.role_id
+      LEFT JOIN permissions p ON rp.permission_id = p.id
+      WHERE u.id = ${payload.sub}::uuid AND u.deleted_at IS NULL AND u.is_active = true
+      GROUP BY u.id
+      LIMIT 1
+    `;
+
+    if (users.length === 0 || !users[0]) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const user = users[0];
+    const jwtPayload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      organizationId: user.organization_id,
+      roles: user.roles,
+      permissions: user.permissions,
+      sessionId: '',
+    };
+
+    return this.issueTokens(jwtPayload);
+  }
+
+  /**
+   * Issue access + refresh tokens and create session
+   */
+  private async issueTokens(user: JwtPayload): Promise<TokenResponseDto> {
     const sessionId = uuidv4();
     const payload: JwtPayload = {
       ...user,
@@ -127,7 +231,8 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const userId = uuidv4();
-    const orgId = dto.organizationId || uuidv4();
+    // New registrations create a new org. Joining existing orgs requires admin invitation.
+    const orgId = uuidv4();
 
     // Create user - in real implementation, this would use Prisma client
     await this.prisma.$executeRaw`
@@ -230,7 +335,9 @@ export class AuthService {
         tokenType: 'Bearer',
       };
     } catch (error) {
-      this.logger.error('Token refresh failed', error);
+      this.logger.error(
+        `Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       throw new UnauthorizedException('Invalid refresh token');
     }
   }

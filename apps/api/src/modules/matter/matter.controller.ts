@@ -129,4 +129,51 @@ export class MatterController {
   ) {
     return this.matterService.getActivityHistory(id, organizationId);
   }
+
+  @Post('conflicts/check')
+  @Permissions(Permission.MATTER_READ)
+  @ApiOperation({ summary: 'Check for conflicts of interest' })
+  @ApiResponse({ status: 200, description: 'Conflict check result' })
+  async checkConflicts(
+    @Body() body: { partyIds: string[]; excludeMatterId?: string },
+    @OrganizationId() organizationId: string,
+  ) {
+    return this.matterService.checkConflicts(
+      body.partyIds,
+      organizationId,
+      body.excludeMatterId,
+    );
+  }
+
+  @Post(':id/parties')
+  @Permissions(Permission.MATTER_UPDATE)
+  @ApiOperation({ summary: 'Add parties to a matter (with conflict checking)' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Parties added' })
+  @ApiResponse({ status: 409, description: 'Conflict of interest detected' })
+  async addParties(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { parties: Array<{ partyId: string; role: string }> },
+    @OrganizationId() organizationId: string,
+  ) {
+    // skipConflictCheck is never user-controlled — always enforce conflict checks
+    return this.matterService.addParties(
+      id,
+      body.parties,
+      organizationId,
+      false,
+    );
+  }
+
+  @Get(':id/parties')
+  @Permissions(Permission.MATTER_READ)
+  @ApiOperation({ summary: 'Get parties on a matter' })
+  @ApiParam({ name: 'id', type: 'string', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'List of parties' })
+  async getParties(
+    @Param('id', ParseUUIDPipe) id: string,
+    @OrganizationId() organizationId: string,
+  ) {
+    return this.matterService.getParties(id, organizationId);
+  }
 }

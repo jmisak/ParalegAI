@@ -39,7 +39,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "20.17.0",
     "prettier": "^3.4.0",
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
@@ -51,6 +51,10 @@
         "react",
         "react-dom"
       ]
+    },
+    "overrides": {
+      "@types/node": "20.17.0",
+      "undici-types": "6.19.8"
     }
   }
 }

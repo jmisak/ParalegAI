@@ -33,6 +33,19 @@ interface MatterUpdateData {
   updatedBy: string;
 }
 
+/**
+ * Whitelist of allowed sort columns to prevent SQL injection
+ */
+const ALLOWED_SORT_COLUMNS: Record<string, string> = {
+  created_at: 'm.created_at',
+  updated_at: 'm.updated_at',
+  title: 'm.title',
+  status: 'm.status',
+  priority: 'm.priority',
+  closing_date: 'm.closing_date',
+  type: 'm.type',
+};
+
 @Injectable()
 export class MatterRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -83,8 +96,9 @@ export class MatterRepository {
   ): Promise<{ data: Array<Record<string, unknown>>; total: number }> {
     const offset = ((pagination.page || 1) - 1) * (pagination.limit || 20);
     const limit = pagination.limit || 20;
-    const sortBy = pagination.sortBy || 'created_at';
-    const sortOrder = pagination.sortOrder || 'desc';
+    // Sanitize sort column against whitelist to prevent SQL injection
+    const sortColumn = ALLOWED_SORT_COLUMNS[pagination.sortBy || 'created_at'] || 'm.created_at';
+    const sortOrder = pagination.sortOrder === 'asc' ? 'ASC' : 'DESC';
 
     // Build dynamic WHERE conditions
     let whereClause = `WHERE m.organization_id = $1::uuid AND m.deleted_at IS NULL`;
@@ -117,7 +131,7 @@ export class MatterRepository {
     );
     const total = Number(countResult[0]?.count || 0);
 
-    // Data query with pagination
+    // Data query with pagination (sort column is whitelisted, not user input)
     const dataQuery = `
       SELECT m.*,
              array_agg(DISTINCT ma.user_id) FILTER (WHERE ma.user_id IS NOT NULL) as team_members
@@ -125,7 +139,7 @@ export class MatterRepository {
       LEFT JOIN matter_assignments ma ON m.id = ma.matter_id
       ${whereClause}
       GROUP BY m.id
-      ORDER BY m.${sortBy} ${sortOrder}
+      ORDER BY ${sortColumn} ${sortOrder}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -167,6 +181,7 @@ export class MatterRepository {
   async update(
     id: string,
     data: MatterUpdateData,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
     const result = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
       UPDATE matters
@@ -180,6 +195,8 @@ export class MatterRepository {
         updated_by = ${data.updatedBy}::uuid,
         updated_at = NOW()
       WHERE id = ${id}::uuid
+        AND organization_id = ${organizationId}::uuid
+        AND deleted_at IS NULL
       RETURNING *
     `;
 
@@ -193,61 +210,160 @@ export class MatterRepository {
   /**
    * Soft delete a matter
    */
-  async softDelete(id: string, deletedBy: string): Promise<void> {
+  async softDelete(id: string, deletedBy: string, organizationId: string): Promise<void> {
     await this.prisma.$executeRaw`
       UPDATE matters
       SET deleted_at = NOW(), updated_by = ${deletedBy}::uuid
       WHERE id = ${id}::uuid
+        AND organization_id = ${organizationId}::uuid
+        AND deleted_at IS NULL
     `;
   }
 
   /**
    * Assign team members to a matter
+   * Wrapped in a transaction to prevent orphaned state if INSERT fails
    */
   async assignTeam(
     matterId: string,
     userIds: string[],
     assignedBy: string,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    // Remove existing assignments
-    await this.prisma.$executeRaw`
-      DELETE FROM matter_assignments WHERE matter_id = ${matterId}::uuid
-    `;
-
-    // Add new assignments
-    for (const userId of userIds) {
-      await this.prisma.$executeRaw`
-        INSERT INTO matter_assignments (matter_id, user_id, assigned_by, assigned_at)
-        VALUES (${matterId}::uuid, ${userId}::uuid, ${assignedBy}::uuid, NOW())
+    return this.prisma.$transaction(async (tx) => {
+      // Remove existing assignments
+      await tx.$executeRaw`
+        DELETE FROM matter_assignments
+        WHERE matter_id = ${matterId}::uuid
       `;
-    }
 
-    // Return updated matter
-    const result = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
-      SELECT m.*,
-             array_agg(DISTINCT ma.user_id) FILTER (WHERE ma.user_id IS NOT NULL) as team_members
-      FROM matters m
-      LEFT JOIN matter_assignments ma ON m.id = ma.matter_id
-      WHERE m.id = ${matterId}::uuid
-      GROUP BY m.id
-    `;
+      // Add new assignments
+      for (const userId of userIds) {
+        await tx.$executeRaw`
+          INSERT INTO matter_assignments (matter_id, user_id, assigned_by, assigned_at)
+          VALUES (${matterId}::uuid, ${userId}::uuid, ${assignedBy}::uuid, NOW())
+        `;
+      }
 
-    const matter = result[0];
-    if (!matter) {
-      throw new Error('Matter not found');
-    }
-    return matter;
+      // Return updated matter
+      const result = await tx.$queryRaw<Array<Record<string, unknown>>>`
+        SELECT m.*,
+               array_agg(DISTINCT ma.user_id) FILTER (WHERE ma.user_id IS NOT NULL) as team_members
+        FROM matters m
+        LEFT JOIN matter_assignments ma ON m.id = ma.matter_id
+        WHERE m.id = ${matterId}::uuid
+          AND m.organization_id = ${organizationId}::uuid
+          AND m.deleted_at IS NULL
+        GROUP BY m.id
+      `;
+
+      const matter = result[0];
+      if (!matter) {
+        throw new Error('Matter not found');
+      }
+      return matter;
+    });
   }
 
   /**
    * Get activity history for a matter
    */
-  async getActivityHistory(matterId: string): Promise<Array<Record<string, unknown>>> {
+  async getActivityHistory(
+    matterId: string,
+    organizationId: string,
+  ): Promise<Array<Record<string, unknown>>> {
     return this.prisma.$queryRaw<Array<Record<string, unknown>>>`
-      SELECT * FROM matter_activities
-      WHERE matter_id = ${matterId}::uuid
-      ORDER BY created_at DESC
+      SELECT ma.* FROM matter_activities ma
+      JOIN matters m ON ma.matter_id = m.id
+      WHERE ma.matter_id = ${matterId}::uuid
+        AND m.organization_id = ${organizationId}::uuid
+        AND m.deleted_at IS NULL
+      ORDER BY ma.created_at DESC
       LIMIT 100
+    `;
+  }
+
+  /**
+   * Check for conflicts of interest
+   *
+   * Identifies matters where any of the given party IDs appear
+   * on opposing sides, implementing Chinese Wall requirements.
+   *
+   * @param partyIds - Party IDs to check for conflicts
+   * @param organizationId - Tenant organization
+   * @param excludeMatterId - Matter to exclude from check (for updates)
+   * @returns Array of conflicting matters with details
+   */
+  async checkConflicts(
+    partyIds: string[],
+    organizationId: string,
+    excludeMatterId?: string,
+  ): Promise<Array<Record<string, unknown>>> {
+    if (partyIds.length === 0) return [];
+
+    // Find matters where any of the given parties already appear
+    const conflicts = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+      SELECT DISTINCT
+        m.id as matter_id,
+        m.title as matter_title,
+        m.status as matter_status,
+        mp.party_id,
+        p.name as party_name,
+        mp.role as party_role
+      FROM matter_parties mp
+      JOIN matters m ON mp.matter_id = m.id
+      JOIN parties p ON mp.party_id = p.id
+      WHERE mp.party_id = ANY(${partyIds}::uuid[])
+        AND m.organization_id = ${organizationId}::uuid
+        AND m.deleted_at IS NULL
+        AND m.status NOT IN ('closed', 'cancelled')
+        ${excludeMatterId ? this.prisma.$queryRaw`AND m.id != ${excludeMatterId}::uuid` : this.prisma.$queryRaw``}
+      ORDER BY m.title
+    `;
+
+    return conflicts;
+  }
+
+  /**
+   * Add parties to a matter
+   */
+  async addParties(
+    matterId: string,
+    parties: Array<{ partyId: string; role: string }>,
+    organizationId: string,
+  ): Promise<void> {
+    for (const party of parties) {
+      await this.prisma.$executeRaw`
+        INSERT INTO matter_parties (id, matter_id, party_id, role, organization_id, created_at)
+        VALUES (
+          gen_random_uuid(),
+          ${matterId}::uuid,
+          ${party.partyId}::uuid,
+          ${party.role},
+          ${organizationId}::uuid,
+          NOW()
+        )
+        ON CONFLICT (matter_id, party_id) DO UPDATE SET role = ${party.role}
+      `;
+    }
+  }
+
+  /**
+   * Get parties for a matter
+   */
+  async getParties(
+    matterId: string,
+    organizationId: string,
+  ): Promise<Array<Record<string, unknown>>> {
+    return this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+      SELECT mp.*, p.name as party_name, p.type as party_type, p.email as party_email
+      FROM matter_parties mp
+      JOIN parties p ON mp.party_id = p.id
+      JOIN matters m ON mp.matter_id = m.id
+      WHERE mp.matter_id = ${matterId}::uuid
+        AND m.organization_id = ${organizationId}::uuid
+        AND m.deleted_at IS NULL
+      ORDER BY mp.role, p.name
     `;
   }
 }

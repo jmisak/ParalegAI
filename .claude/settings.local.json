@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l \"G:/apps/ironclad/apps/web/src/components/ui/data-table.tsx\" \"G:/apps/ironclad/apps/web/src/components/ui/file-upload.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/verify-mfa/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/register/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/_components/matter-form.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/new/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/[id]/edit/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/[id]/page.tsx\" \"G:/apps/ironclad/apps/web/src/lib/hooks/use-templates.ts\" \"G:/apps/ironclad/apps/web/src/components/ui/index.ts\" \"G:/apps/ironclad/apps/web/src/lib/api.ts\" \"G:/apps/ironclad/apps/web/src/lib/hooks/index.ts\")"
+    ]
+  }
+}

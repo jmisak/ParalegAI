@@ -20,3 +20,5 @@ export {
   DialogTitle,
   DialogDescription,
 } from './dialog';
+export { DataTable, type DataTableProps, getSelectionColumn } from './data-table';
+export { FileUpload, type FileUploadProps } from './file-upload';

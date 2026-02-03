@@ -53,6 +53,9 @@ export interface CreateMatterInput {
   purchasePrice?: number;
   contractDate?: string;
   closingDate?: string;
+  dueDiligenceDeadline?: string;
+  opposingParty?: string;
+  assignedAttorney?: string;
 }
 
 export interface UpdateMatterInput extends Partial<CreateMatterInput> {

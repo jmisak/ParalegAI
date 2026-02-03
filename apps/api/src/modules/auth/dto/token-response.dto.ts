@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TokenResponseDto {
   @ApiProperty({
@@ -24,4 +24,15 @@ export class TokenResponseDto {
     example: 'Bearer',
   })
   tokenType: string;
+
+  @ApiPropertyOptional({
+    description: 'Whether MFA verification is required before tokens are usable',
+    example: false,
+  })
+  mfaRequired?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Short-lived MFA challenge token (only present when mfaRequired is true)',
+  })
+  mfaToken?: string;
 }

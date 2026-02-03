@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, queryKeys } from '@/lib/api';
 
+const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -96,6 +98,42 @@ export function getCategoryLabel(category: TemplateCategory): string {
 }
 
 // ---------------------------------------------------------------------------
+// API response type (backend uses isActive: boolean, not status string)
+// ---------------------------------------------------------------------------
+
+interface ApiTemplate {
+  id: string;
+  name: string;
+  category: TemplateCategory;
+  description: string;
+  content: string;
+  variables: TemplateVariable[];
+  jurisdiction?: string;
+  version: number;
+  isActive: boolean;
+  organizationId: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapApiTemplate(t: ApiTemplate): Template {
+  return {
+    id: t.id,
+    name: t.name,
+    category: t.category,
+    description: t.description,
+    variables: t.variables,
+    jurisdiction: t.jurisdiction ?? '',
+    version: t.version,
+    status: t.isActive ? 'active' : 'draft',
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Hooks
 // ---------------------------------------------------------------------------
 
@@ -106,9 +144,11 @@ export function useTemplates(filters?: TemplateFilters) {
   const query = useQuery({
     queryKey: queryKeys.templates.list(filters as Record<string, unknown> | undefined),
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      // return api.get<Template[]>('/templates', { params: filters as Record<string, string> });
-      return getMockTemplates();
+      if (USE_MOCKS) return getMockTemplates();
+      const data = await api.get<ApiTemplate[]>('/templates', {
+        params: filters as Record<string, string>,
+      });
+      return data.map(mapApiTemplate);
     },
   });
 
@@ -128,14 +168,14 @@ export function useTemplate(id: string) {
   const query = useQuery({
     queryKey: queryKeys.templates.detail(id),
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      // return api.get<Template>(`/templates/${id}`);
-      const templates = getMockTemplates();
-      const template = templates.find((t) => t.id === id);
-      if (!template) {
-        throw new Error('Template not found');
+      if (USE_MOCKS) {
+        const templates = getMockTemplates();
+        const template = templates.find((t) => t.id === id);
+        if (!template) throw new Error('Template not found');
+        return template;
       }
-      return template;
+      const data = await api.get<ApiTemplate>(`/templates/${id}`);
+      return mapApiTemplate(data);
     },
     enabled: !!id,
   });
@@ -170,11 +210,11 @@ export function useCreateTemplate() {
 export function useRenderTemplate() {
   return useMutation({
     mutationFn: async (input: RenderTemplateInput) => {
-      // TODO: Replace with actual API call
-      // return api.post<RenderTemplateOutput>(`/templates/${input.templateId}/render`, {
-      //   variables: input.variables,
-      // });
-      return getMockRenderedContent(input);
+      if (USE_MOCKS) return getMockRenderedContent(input);
+      return api.post<RenderTemplateOutput>(
+        `/templates/${input.templateId}/render`,
+        { variables: input.variables },
+      );
     },
   });
 }

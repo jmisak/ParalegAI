@@ -3,6 +3,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api, queryKeys } from '@/lib/api';
 
+const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS !== 'false';
+
 export interface Matter {
   id: string;
   matterNumber: string;
@@ -69,9 +71,8 @@ export function useMatter(filters?: MatterFilters) {
   const query = useQuery({
     queryKey: queryKeys.matters.list(filters as Record<string, unknown> | undefined),
     queryFn: async () => {
-      // For now, return mock data until API is ready
-      // TODO: Replace with actual API call
-      return getMockMatters();
+      if (USE_MOCKS) return getMockMatters();
+      return api.get<Matter[]>('/matters', { params: filters as Record<string, string> });
     },
   });
 
@@ -91,13 +92,13 @@ export function useMatterDetail(id: string) {
   const query = useQuery({
     queryKey: queryKeys.matters.detail(id),
     queryFn: async () => {
-      // TODO: Replace with actual API call
-      const matters = getMockMatters();
-      const matter = matters.find((m) => m.id === id);
-      if (!matter) {
-        throw new Error('Matter not found');
+      if (USE_MOCKS) {
+        const matters = getMockMatters();
+        const matter = matters.find((m) => m.id === id);
+        if (!matter) throw new Error('Matter not found');
+        return matter;
       }
-      return matter;
+      return api.get<Matter>(`/matters/${id}`);
     },
     enabled: !!id,
   });

@@ -301,8 +301,31 @@ export class MatterRepository {
   ): Promise<Array<Record<string, unknown>>> {
     if (partyIds.length === 0) return [];
 
-    // Find matters where any of the given parties already appear
-    const conflicts = await this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+    // Split into two query paths to avoid nesting $queryRaw (which returns a
+    // Promise, not a SQL fragment, and cannot be interpolated inside tagged
+    // template literals).
+    if (excludeMatterId) {
+      return this.prisma.$queryRaw<Array<Record<string, unknown>>>`
+        SELECT DISTINCT
+          m.id as matter_id,
+          m.title as matter_title,
+          m.status as matter_status,
+          mp.party_id,
+          p.name as party_name,
+          mp.role as party_role
+        FROM matter_parties mp
+        JOIN matters m ON mp.matter_id = m.id
+        JOIN parties p ON mp.party_id = p.id
+        WHERE mp.party_id = ANY(${partyIds}::uuid[])
+          AND m.organization_id = ${organizationId}::uuid
+          AND m.deleted_at IS NULL
+          AND m.status NOT IN ('closed', 'cancelled')
+          AND m.id != ${excludeMatterId}::uuid
+        ORDER BY m.title
+      `;
+    }
+
+    return this.prisma.$queryRaw<Array<Record<string, unknown>>>`
       SELECT DISTINCT
         m.id as matter_id,
         m.title as matter_title,
@@ -317,11 +340,8 @@ export class MatterRepository {
         AND m.organization_id = ${organizationId}::uuid
         AND m.deleted_at IS NULL
         AND m.status NOT IN ('closed', 'cancelled')
-        ${excludeMatterId ? this.prisma.$queryRaw`AND m.id != ${excludeMatterId}::uuid` : this.prisma.$queryRaw``}
       ORDER BY m.title
     `;
-
-    return conflicts;
   }
 
   /**

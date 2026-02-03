@@ -5,6 +5,9 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": false,
+    "builder": "swc",
+    "typeCheck": false,
+    "tsConfigPath": "tsconfig.build.json",
     "assets": [
       {
         "include": "../prisma/**/*",

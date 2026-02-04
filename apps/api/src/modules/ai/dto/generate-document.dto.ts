@@ -20,7 +20,7 @@ export class GenerateDocumentDto {
     enum: TemplateType,
   })
   @IsEnum(TemplateType)
-  templateType: TemplateType;
+  templateType!: TemplateType;
 
   @ApiPropertyOptional({
     description: 'Additional context for document generation',

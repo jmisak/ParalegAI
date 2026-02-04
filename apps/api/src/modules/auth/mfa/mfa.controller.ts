@@ -11,7 +11,7 @@ import { IsString, Length, IsIn, IsBoolean, IsOptional, IsJWT } from 'class-vali
 import { Public } from '@common/decorators';
 import { MfaService } from './mfa.service';
 import { AuthService } from '../auth.service';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@common/guards';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { JwtPayload } from '@common/interfaces';
 

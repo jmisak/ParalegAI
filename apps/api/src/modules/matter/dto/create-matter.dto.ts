@@ -44,7 +44,7 @@ export class CreateMatterDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: 'Matter description',
@@ -61,7 +61,7 @@ export class CreateMatterDto {
     example: MatterType.PURCHASE,
   })
   @IsEnum(MatterType)
-  type: MatterType;
+  type!: MatterType;
 
   @ApiPropertyOptional({
     description: 'Matter status',

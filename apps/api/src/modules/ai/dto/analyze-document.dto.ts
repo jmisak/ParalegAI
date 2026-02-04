@@ -27,7 +27,7 @@ export class AnalyzeDocumentDto {
   })
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 
   @ApiPropertyOptional({
     description: 'Type of document being analyzed',

@@ -37,7 +37,7 @@ export class CreateTaskDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: 'Task description',
@@ -54,7 +54,7 @@ export class CreateTaskDto {
     example: TaskType.REVIEW,
   })
   @IsEnum(TaskType)
-  taskType: TaskType;
+  taskType!: TaskType;
 
   @ApiPropertyOptional({
     description: 'Task priority',

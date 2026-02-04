@@ -245,18 +245,17 @@ export class AuditInterceptor implements NestInterceptor {
         query: this.sanitizeObject(request.query),
         ip: this.getClientIp(request),
         userAgent: request.headers['user-agent'] || 'unknown',
-        correlationId: request.headers['x-correlation-id'] as string,
+        correlationId: (Array.isArray(request.headers['x-correlation-id']) ? request.headers['x-correlation-id'][0] : request.headers['x-correlation-id']) as string,
       },
       response: {
         statusCode: response.statusCode,
         duration,
       },
       previousHash: this.lastLogHash,
-      hash: '', // Will be computed
     };
 
     // Add resource context if available
-    const resourceId = request.params?.id || request.params?.documentId || request.params?.matterId;
+    const resourceId = (request.params?.id || request.params?.documentId || request.params?.matterId) as string | undefined;
     if (resourceId) {
       entry.resource = {
         type: this.inferResourceType(request.path),

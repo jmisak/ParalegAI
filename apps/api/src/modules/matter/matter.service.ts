@@ -27,6 +27,7 @@ export class MatterService {
 
     const matter = await this.matterRepository.create({
       ...dto,
+      closingDate: dto.closingDate ? new Date(dto.closingDate) : undefined,
       organizationId,
       createdBy: userId,
       updatedBy: userId,
@@ -88,6 +89,7 @@ export class MatterService {
 
     const updated = await this.matterRepository.update(id, {
       ...dto,
+      closingDate: dto.closingDate ? new Date(dto.closingDate) : undefined,
       updatedBy: userId,
     }, organizationId);
 

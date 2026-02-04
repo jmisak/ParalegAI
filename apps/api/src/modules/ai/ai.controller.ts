@@ -88,6 +88,11 @@ export class AIController {
     @Query() query: TokenUsageQueryDto,
     @OrganizationId() organizationId: string,
   ) {
-    return this.tokenUsageService.getUsage(organizationId, query);
+    return this.tokenUsageService.getUsage(organizationId, {
+      startDate: query.startDate ? new Date(query.startDate) : undefined,
+      endDate: query.endDate ? new Date(query.endDate) : undefined,
+      provider: query.provider,
+      userId: query.userId,
+    });
   }
 }

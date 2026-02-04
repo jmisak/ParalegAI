@@ -5,25 +5,25 @@ export class TokenResponseDto {
     description: 'JWT access token',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
-  accessToken: string;
+  accessToken!: string;
 
   @ApiProperty({
     description: 'JWT refresh token',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
-  refreshToken: string;
+  refreshToken!: string;
 
   @ApiProperty({
     description: 'Token expiration time in seconds',
     example: 900,
   })
-  expiresIn: number;
+  expiresIn!: number;
 
   @ApiProperty({
     description: 'Token type',
     example: 'Bearer',
   })
-  tokenType: string;
+  tokenType!: string;
 
   @ApiPropertyOptional({
     description: 'Whether MFA verification is required before tokens are usable',

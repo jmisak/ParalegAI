@@ -5,20 +5,20 @@ export class SearchResultItem {
     description: 'Entity ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Entity type',
     enum: ['matter', 'document', 'task'],
     example: 'matter',
   })
-  type: 'matter' | 'document' | 'task';
+  type!: 'matter' | 'document' | 'task';
 
   @ApiProperty({
     description: 'Result title',
     example: 'Smith Property Purchase',
   })
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: 'Result description or snippet',
@@ -29,7 +29,7 @@ export class SearchResultItem {
     description: 'Relevance score',
     example: 0.85,
   })
-  score: number;
+  score!: number;
 
   @ApiPropertyOptional({
     description: 'Additional metadata',
@@ -42,25 +42,25 @@ export class SearchResultDto {
     description: 'Search results',
     type: [SearchResultItem],
   })
-  results: SearchResultItem[];
+  results!: SearchResultItem[];
 
   @ApiProperty({
     description: 'Total number of results',
     example: 42,
   })
-  total: number;
+  total!: number;
 
   @ApiProperty({
     description: 'Original search query',
     example: 'purchase agreement',
   })
-  query: string;
+  query!: string;
 
   @ApiProperty({
     description: 'Search execution time in milliseconds',
     example: 125,
   })
-  searchTimeMs: number;
+  searchTimeMs!: number;
 
   @ApiPropertyOptional({
     description: 'Result facets by type',

@@ -52,7 +52,7 @@ export class AuditLogInterceptor implements NestInterceptor {
     const resource = controller.replace('Controller', '').toLowerCase();
 
     // Extract resource ID from params if available
-    const resourceId = request.params['id'] || null;
+    const resourceId = (request.params['id'] as string) || null;
 
     return next.handle().pipe(
       tap({
@@ -69,7 +69,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             statusCode: response.statusCode,
             duration,
             ip: this.extractClientIp(request),
-            userAgent,
+            userAgent: typeof userAgent === 'string' ? userAgent : 'unknown',
           });
 
           this.logAuditEntry(entry);
@@ -87,7 +87,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             statusCode: error.status || 500,
             duration,
             ip: this.extractClientIp(request),
-            userAgent,
+            userAgent: typeof userAgent === 'string' ? userAgent : 'unknown',
             metadata: { error: error.message },
           });
 

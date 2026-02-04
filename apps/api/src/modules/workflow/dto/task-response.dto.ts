@@ -5,13 +5,13 @@ export class TaskResponseDto {
     description: 'Task ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Task title',
     example: 'Review purchase agreement',
   })
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: 'Task description',
@@ -22,19 +22,19 @@ export class TaskResponseDto {
     description: 'Task type',
     example: 'review',
   })
-  taskType: string;
+  taskType!: string;
 
   @ApiProperty({
     description: 'Task status',
     example: 'pending',
   })
-  status: string;
+  status!: string;
 
   @ApiProperty({
     description: 'Task priority',
     example: 'medium',
   })
-  priority: string;
+  priority!: string;
 
   @ApiPropertyOptional({
     description: 'Associated matter ID',
@@ -59,15 +59,15 @@ export class TaskResponseDto {
   @ApiProperty({
     description: 'Organization ID',
   })
-  organizationId: string;
+  organizationId!: string;
 
   @ApiProperty({
     description: 'Creation timestamp',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({
     description: 'Created by user ID',
   })
-  createdBy: string;
+  createdBy!: string;
 }

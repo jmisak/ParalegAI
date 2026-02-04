@@ -85,7 +85,7 @@ export class StorageModule {
 
         return new LocalStorageProvider(configService);
       },
-      inject: [ConfigService, ...(options.inject || [])],
+      inject: [ConfigService, ...((options.inject || []) as any[])],
     };
 
     return {

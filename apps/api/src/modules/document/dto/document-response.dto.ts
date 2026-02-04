@@ -5,25 +5,25 @@ export class DocumentResponseDto {
     description: 'Document ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Original file name',
     example: 'deed_of_trust.pdf',
   })
-  fileName: string;
+  fileName!: string;
 
   @ApiProperty({
     description: 'MIME type',
     example: 'application/pdf',
   })
-  mimeType: string;
+  mimeType!: string;
 
   @ApiProperty({
     description: 'File size in bytes',
     example: 1048576,
   })
-  fileSize: number;
+  fileSize!: number;
 
   @ApiPropertyOptional({
     description: 'Associated matter ID',
@@ -45,31 +45,31 @@ export class DocumentResponseDto {
     description: 'Whether document is attorney-client privileged',
     example: false,
   })
-  isPrivileged: boolean;
+  isPrivileged!: boolean;
 
   @ApiProperty({
     description: 'Document version number',
     example: 1,
   })
-  version: number;
+  version!: number;
 
   @ApiProperty({
     description: 'Organization ID',
   })
-  organizationId: string;
+  organizationId!: string;
 
   @ApiProperty({
     description: 'Creation timestamp',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({
     description: 'Last update timestamp',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiProperty({
     description: 'Created by user ID',
   })
-  createdBy: string;
+  createdBy!: string;
 }

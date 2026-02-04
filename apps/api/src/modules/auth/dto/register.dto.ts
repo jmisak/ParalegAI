@@ -13,7 +13,7 @@ export class RegisterDto {
     example: 'john.doe@example.com',
   })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({
     description: 'User password (min 8 chars, must include uppercase, lowercase, number, and special char)',
@@ -30,7 +30,7 @@ export class RegisterDto {
         'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
     },
   )
-  password: string;
+  password!: string;
 
   @ApiProperty({
     description: 'User first name',
@@ -39,7 +39,7 @@ export class RegisterDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  firstName: string;
+  firstName!: string;
 
   @ApiProperty({
     description: 'User last name',
@@ -48,7 +48,7 @@ export class RegisterDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  lastName: string;
+  lastName!: string;
 
   // organizationId intentionally removed from public DTO.
   // Tenant assignment is handled by admin invitation flow only.

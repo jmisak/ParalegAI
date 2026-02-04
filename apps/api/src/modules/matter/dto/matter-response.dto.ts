@@ -5,13 +5,13 @@ export class MatterResponseDto {
     description: 'Matter ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Matter title',
     example: 'Smith Property Purchase - 123 Main St',
   })
-  title: string;
+  title!: string;
 
   @ApiPropertyOptional({
     description: 'Matter description',
@@ -22,19 +22,19 @@ export class MatterResponseDto {
     description: 'Matter type',
     example: 'purchase',
   })
-  type: string;
+  type!: string;
 
   @ApiProperty({
     description: 'Matter status',
     example: 'active',
   })
-  status: string;
+  status!: string;
 
   @ApiProperty({
     description: 'Matter priority',
     example: 'medium',
   })
-  priority: string;
+  priority!: string;
 
   @ApiPropertyOptional({
     description: 'Client ID',
@@ -60,25 +60,25 @@ export class MatterResponseDto {
   @ApiProperty({
     description: 'Organization ID',
   })
-  organizationId: string;
+  organizationId!: string;
 
   @ApiProperty({
     description: 'Creation timestamp',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty({
     description: 'Last update timestamp',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @ApiProperty({
     description: 'Created by user ID',
   })
-  createdBy: string;
+  createdBy!: string;
 
   @ApiProperty({
     description: 'Last updated by user ID',
   })
-  updatedBy: string;
+  updatedBy!: string;
 }

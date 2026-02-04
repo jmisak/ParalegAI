@@ -246,7 +246,7 @@ export function sanitizeObject(
       violations.push('ARRAY_TRUNCATED');
       obj = obj.slice(0, config.maxArrayLength);
     }
-    const sanitizedArray = obj.map((item) => {
+    const sanitizedArray = (obj as unknown[]).map((item: unknown) => {
       const result = sanitizeObject(item, config, depth + 1);
       violations.push(...result.violations);
       return result.sanitized;

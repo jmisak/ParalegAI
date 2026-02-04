@@ -5,42 +5,42 @@ export class JobStatusDto {
     description: 'Job ID',
     example: '1',
   })
-  id: string;
+  id!: string;
 
   @ApiProperty({
     description: 'Job name',
     example: 'process-document',
   })
-  name: string;
+  name!: string;
 
   @ApiProperty({
     description: 'Job data payload',
   })
-  data: Record<string, unknown>;
+  data!: Record<string, unknown>;
 
   @ApiProperty({
     description: 'Job status',
     enum: ['waiting', 'active', 'completed', 'failed'],
     example: 'active',
   })
-  status: string;
+  status!: string;
 
   @ApiProperty({
     description: 'Job progress (0-100)',
     example: 50,
   })
-  progress: number;
+  progress!: number;
 
   @ApiProperty({
     description: 'Number of attempts made',
     example: 1,
   })
-  attemptsMade: number;
+  attemptsMade!: number;
 
   @ApiProperty({
     description: 'Job creation timestamp',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiPropertyOptional({
     description: 'When processing started',

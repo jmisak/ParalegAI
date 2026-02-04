@@ -90,7 +90,7 @@ const Stack = React.forwardRef<HTMLDivElement, StackProps>(
 
     return (
       <Component
-        ref={ref}
+        ref={ref as React.Ref<HTMLDivElement>}
         className={cn(stackVariants({ direction, gap, align, justify, wrap }), className)}
         {...props}
       >

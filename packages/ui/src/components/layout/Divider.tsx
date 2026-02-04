@@ -97,7 +97,7 @@ const Divider = React.forwardRef<HTMLDivElement, DividerProps>(
         <div
           ref={ref}
           role="separator"
-          aria-orientation={orientation}
+          aria-orientation={orientation ?? undefined}
           className={cn(dividerVariants({ orientation, variant, spacing }), className)}
           {...props}
         />

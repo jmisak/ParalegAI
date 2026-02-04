@@ -4,7 +4,7 @@ import { cn } from '../../utils/cn.js';
 import { Button } from '../base/Button.js';
 
 export interface SearchInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size'> {
   /** Current search value (controlled) */
   value?: string;
   /** Default value (uncontrolled) */

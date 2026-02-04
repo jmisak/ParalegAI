@@ -1,7 +1,38 @@
 {
   "permissions": {
     "allow": [
-      "Bash(wc -l \"G:/apps/ironclad/apps/web/src/components/ui/data-table.tsx\" \"G:/apps/ironclad/apps/web/src/components/ui/file-upload.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/verify-mfa/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/register/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/_components/matter-form.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/new/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/[id]/edit/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/[id]/page.tsx\" \"G:/apps/ironclad/apps/web/src/lib/hooks/use-templates.ts\" \"G:/apps/ironclad/apps/web/src/components/ui/index.ts\" \"G:/apps/ironclad/apps/web/src/lib/api.ts\" \"G:/apps/ironclad/apps/web/src/lib/hooks/index.ts\")"
+      "Bash(wc -l \"G:/apps/ironclad/apps/web/src/components/ui/data-table.tsx\" \"G:/apps/ironclad/apps/web/src/components/ui/file-upload.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/verify-mfa/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(auth\\)/register/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/_components/matter-form.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/new/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/matters/[id]/edit/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/page.tsx\" \"G:/apps/ironclad/apps/web/src/app/\\(dashboard\\)/templates/[id]/page.tsx\" \"G:/apps/ironclad/apps/web/src/lib/hooks/use-templates.ts\" \"G:/apps/ironclad/apps/web/src/components/ui/index.ts\" \"G:/apps/ironclad/apps/web/src/lib/api.ts\" \"G:/apps/ironclad/apps/web/src/lib/hooks/index.ts\")",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git status:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash push:*)",
+      "Bash(gh run list:*)",
+      "Bash(where:*)",
+      "Bash(npm view:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm --filter=@ironclad/web add @tanstack/react-table)",
+      "Bash(npx nest build)",
+      "Bash(pnpm --filter=@ironclad/api add:*)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(npx turbo run build:*)",
+      "Bash(pnpm --filter=@ironclad/web update:*)",
+      "Bash(npx next build)",
+      "Bash(pnpm:*)",
+      "Bash(npx prisma generate)",
+      "WebFetch(domain:github.com)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" status)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" diff --stat)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" log --oneline -5)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" add package.json pnpm-lock.yaml packages/ui/src/components/layout/Grid.tsx packages/ui/src/components/layout/Stack.tsx packages/shared/eslint.config.mjs packages/ui/eslint.config.mjs)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" commit -m \"$\\(cat <<''EOF''\nfix\\(ci\\): resolve ESLint configs, ref types, and critical CVE\n\n- Add eslint.config.mjs to packages/shared and packages/ui\n- Fix polymorphic ref casts in Grid.tsx and Stack.tsx \\(ref as any\\)\n- Override @isaacs/brace-expansion to >=5.0.1 \\(GHSA-7h2j-956f-4vf2\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" stash push -m \"local-settings\" -- .claude/settings.local.json)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" checkout main)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" merge master --no-edit)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" push origin main)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" checkout master)",
+      "Bash(git -C \"G:\\\\apps\\\\ironclad\" stash pop)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

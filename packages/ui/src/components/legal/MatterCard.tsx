@@ -96,7 +96,7 @@ const typeConfig: Record<MatterType, { label: string; color: string }> = {
 const MatterCard = React.forwardRef<HTMLDivElement, MatterCardProps>(
   (
     {
-      id,
+      _id,
       referenceNumber,
       title,
       type,

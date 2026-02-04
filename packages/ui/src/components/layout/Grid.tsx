@@ -94,12 +94,12 @@ const Grid = React.forwardRef<HTMLDivElement, GridProps>(
   ) => {
     return (
       <Component
+        {...(props as any)}
         ref={ref as any}
         className={cn(
           gridVariants({ cols, gap, rowGap, colGap, align, justify }),
           className
         )}
-        {...props}
       />
     );
   }

@@ -3,7 +3,6 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import {
   CheckCircle,
   Circle,
-  Clock,
   AlertCircle,
   FileText,
   MessageSquare,

@@ -90,9 +90,9 @@ const Stack = React.forwardRef<HTMLDivElement, StackProps>(
 
     return (
       <Component
+        {...(props as any)}
         ref={ref as any}
         className={cn(stackVariants({ direction, gap, align, justify, wrap }), className)}
-        {...props}
       >
         {divider
           ? childArray.map((child, index) => (

@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { format, isValid, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { DayPicker } from 'react-day-picker';
 import { cn } from '../../utils/cn.js';
 import { Button } from '../base/Button.js';
-import { Input } from '../base/Input.js';
 
 export interface DatePickerProps {
   /** Selected date (controlled) */

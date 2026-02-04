@@ -8,7 +8,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Search,
-  Filter,
   X,
 } from 'lucide-react';
 import { cn } from '../../utils/cn.js';

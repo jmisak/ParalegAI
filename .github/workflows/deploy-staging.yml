@@ -1,8 +1,9 @@
 name: Deploy to Staging
 
 on:
-  push:
-    branches: [main]
+  # Auto-deploy disabled until infrastructure is provisioned
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 concurrency:

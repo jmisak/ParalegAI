@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException, ConflictException } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SessionService } from './session.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -11,8 +11,8 @@ jest.mock('bcrypt');
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prismaService: PrismaService;
-  let jwtService: JwtService;
+  let _prismaService: PrismaService;
+  let _jwtService: JwtService;
   let sessionService: SessionService;
 
   const mockPrismaService = {
@@ -59,8 +59,8 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    prismaService = module.get<PrismaService>(PrismaService);
-    jwtService = module.get<JwtService>(JwtService);
+    _prismaService = module.get<PrismaService>(PrismaService);
+    _jwtService = module.get<JwtService>(JwtService);
     sessionService = module.get<SessionService>(SessionService);
 
     jest.clearAllMocks();

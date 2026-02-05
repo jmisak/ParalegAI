@@ -145,7 +145,7 @@ const fileTypeConfig: Record<string, { icon: React.ElementType; color: string }>
 const DocumentCard = React.forwardRef<HTMLDivElement, DocumentCardProps>(
   (
     {
-      _id,
+      id: _id,
       name,
       type,
       status,

@@ -126,7 +126,7 @@ const pathTraversalPatterns: RegExp[] = [
  * Command injection patterns
  * SECURITY: Detects shell command injection
  */
-const commandInjectionPatterns: RegExp[] = [
+const _commandInjectionPatterns: RegExp[] = [
   /[;&|`$]/, // Shell metacharacters
   /\$\(/, // Command substitution
   /`[^`]+`/, // Backtick command substitution

@@ -11,7 +11,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { randomBytes, createHash, createHmac } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 
 /**
  * Session configuration

@@ -11,7 +11,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
 import { MockPrismaService } from '@test/mocks';
-import { MatterFactory, UserFactory } from '@test/factories';
+import { MatterFactory } from '@test/factories';
 
 // Mock implementation of MatterService for testing
 class MatterService {
@@ -58,7 +58,7 @@ class MatterService {
   }
 
   async update(id: string, data: any, organizationId: string) {
-    const matter = await this.findOne(id, organizationId);
+    const _matter = await this.findOne(id, organizationId);
 
     return this.prisma.matter.update({
       where: { id },
@@ -67,7 +67,7 @@ class MatterService {
   }
 
   async delete(id: string, organizationId: string) {
-    const matter = await this.findOne(id, organizationId);
+    const _matter = await this.findOne(id, organizationId);
 
     // Soft delete
     return this.prisma.matter.update({

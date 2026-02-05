@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsInt, Min, Max, IsObject } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsInt, Min, Max, IsObject } from 'class-validator';
 
 export enum TemplateType {
   PURCHASE_AGREEMENT = 'purchase_agreement',

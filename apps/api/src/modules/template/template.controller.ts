@@ -21,7 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { TemplateService } from './template.service';
 import { JwtAuthGuard, TenantGuard } from '@common/guards';
-import { CurrentUser, OrganizationId, Permissions, Permission } from '@common/decorators';
+import { CurrentUser, OrganizationId } from '@common/decorators';
 import { JwtPayload } from '@common/interfaces';
 import { TenantScoped } from '../../common/decorators/tenant-scoped.decorator';
 import { TemplateCategory, TemplateVariable, ResolutionContext } from './template.types';

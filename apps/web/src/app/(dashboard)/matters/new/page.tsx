@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCreateMatter, type CreateMatterInput } from '@/lib/hooks/use-matter';
+import { useCreateMatter, type CreateMatterInput, type UpdateMatterInput } from '@/lib/hooks/use-matter';
 import { MatterForm } from '../_components/matter-form';
 
 export default function NewMatterPage() {
   const router = useRouter();
   const createMatter = useCreateMatter();
 
-  function handleSubmit(data: CreateMatterInput) {
-    createMatter.mutate(data, {
+  function handleSubmit(data: CreateMatterInput | UpdateMatterInput) {
+    // For new matters, data is always CreateMatterInput
+    createMatter.mutate(data as CreateMatterInput, {
       onSuccess: (created) => {
         router.push(`/dashboard/matters/${created.id}`);
       },

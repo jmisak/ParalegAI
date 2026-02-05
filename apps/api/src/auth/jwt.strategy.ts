@@ -10,7 +10,7 @@
  * - Token revocation support
  */
 
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 /**

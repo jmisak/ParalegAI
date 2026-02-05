@@ -14,7 +14,7 @@ import * as argon2 from 'argon2';
 import { createHash } from 'crypto';
 import { promisify } from 'util';
 
-const sleep = promisify(setTimeout);
+const _sleep = promisify(setTimeout);
 
 /**
  * Argon2id configuration (OWASP recommended parameters)
@@ -150,7 +150,7 @@ export class PasswordService {
 
     try {
       return await argon2.verify(hash, password);
-    } catch (error) {
+    } catch {
       // Log error but don't expose details
       this.logger.warn('Password verification error');
       return false;

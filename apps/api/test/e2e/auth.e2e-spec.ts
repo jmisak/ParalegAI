@@ -10,12 +10,12 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as _request from 'supertest';
 import { FIXTURE_USERS, FIXTURE_PASSWORDS } from '@test/fixtures';
 
 describe('Authentication (E2E)', () => {
   let app: INestApplication;
-  let server: any;
+  let _server: any;
 
   beforeAll(async () => {
     // This would normally create a full NestJS test app
@@ -26,7 +26,7 @@ describe('Authentication (E2E)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    server = app.getHttpServer();
+    _server = app.getHttpServer();
   });
 
   afterAll(async () => {
@@ -169,7 +169,7 @@ describe('Authentication (E2E)', () => {
     });
 
     it('should reject inactive user login', async () => {
-      const inactiveUser = {
+      const _inactiveUser = {
         email: FIXTURE_USERS.inactive.email,
         password: FIXTURE_PASSWORDS.default,
       };

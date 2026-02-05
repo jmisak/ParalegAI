@@ -7,7 +7,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { IsString, Length, IsIn, IsBoolean, IsOptional, IsJWT } from 'class-validator';
+import { IsString, Length, IsIn, IsBoolean, IsOptional } from 'class-validator';
 import { Public } from '@common/decorators';
 import { MfaService } from './mfa.service';
 import { AuthService } from '../auth.service';

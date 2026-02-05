@@ -42,7 +42,7 @@ export class AuditLogInterceptor implements NestInterceptor {
     const startTime = Date.now();
 
     // Extract request details
-    const { method, url, ip, headers } = request;
+    const { method, url, ip: _ip, headers } = request;
     const userAgent = headers['user-agent'] || 'unknown';
     const user = request.user;
 

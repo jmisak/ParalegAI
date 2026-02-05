@@ -11,12 +11,12 @@ export class MockRedisClient {
     return this.store.get(key) ?? null;
   }
 
-  async set(key: string, value: string, mode?: string, duration?: number): Promise<string> {
+  async set(key: string, value: string, _mode?: string, _duration?: number): Promise<string> {
     this.store.set(key, value);
     return 'OK';
   }
 
-  async setex(key: string, seconds: number, value: string): Promise<string> {
+  async setex(key: string, _seconds: number, value: string): Promise<string> {
     this.store.set(key, value);
     return 'OK';
   }
@@ -31,7 +31,7 @@ export class MockRedisClient {
     return this.store.has(key) ? 1 : 0;
   }
 
-  async expire(key: string, seconds: number): Promise<number> {
+  async expire(key: string, _seconds: number): Promise<number> {
     return this.store.has(key) ? 1 : 0;
   }
 

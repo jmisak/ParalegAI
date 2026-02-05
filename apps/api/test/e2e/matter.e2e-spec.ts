@@ -10,13 +10,13 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import * as _request from 'supertest';
 import { FIXTURE_MATTERS, FIXTURE_USERS } from '@test/fixtures';
 
 describe('Matter Management (E2E)', () => {
   let app: INestApplication;
-  let server: any;
-  let authToken: string;
+  let _server: any;
+  let _authToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -25,10 +25,10 @@ describe('Matter Management (E2E)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    server = app.getHttpServer();
+    _server = app.getHttpServer();
 
     // Mock auth token for testing
-    authToken = `Bearer mock-token-${FIXTURE_USERS.paralegal.id}`;
+    _authToken = `Bearer mock-token-${FIXTURE_USERS.paralegal.id}`;
   });
 
   afterAll(async () => {
@@ -232,7 +232,7 @@ describe('Matter Management (E2E)', () => {
 
   describe('PATCH /matters/:id', () => {
     it('should update matter with valid data', async () => {
-      const matterId = FIXTURE_MATTERS.pendingSale.id;
+      const _matterId = FIXTURE_MATTERS.pendingSale.id;
       const updates = {
         status: 'ACTIVE',
         closingDate: '2026-04-15',
@@ -253,7 +253,7 @@ describe('Matter Management (E2E)', () => {
     });
 
     it('should prevent updating immutable fields', async () => {
-      const matterId = FIXTURE_MATTERS.activePurchase.id;
+      const _matterId = FIXTURE_MATTERS.activePurchase.id;
       const updates = {
         matterNumber: 'MODIFIED-NUMBER', // Should be immutable
       };
@@ -270,7 +270,7 @@ describe('Matter Management (E2E)', () => {
     });
 
     it('should track update history', async () => {
-      const matterId = FIXTURE_MATTERS.activePurchase.id;
+      const _matterId = FIXTURE_MATTERS.activePurchase.id;
       const updates = { title: 'Updated Title' };
 
       /*

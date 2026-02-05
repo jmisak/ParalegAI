@@ -18,7 +18,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Observable, tap, catchError, throwError } from 'rxjs';
-import { createHash, createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 import type { Request, Response } from 'express';
 
 /**

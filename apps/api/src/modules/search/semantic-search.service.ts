@@ -67,7 +67,7 @@ export class SemanticSearchService {
   /**
    * Generate embedding for text using AI provider
    */
-  async generateEmbedding(text: string): Promise<number[] | null> {
+  async generateEmbedding(_text: string): Promise<number[] | null> {
     // Check for API key
     const apiKey = this.configService.get<string>('OPENAI_API_KEY');
 

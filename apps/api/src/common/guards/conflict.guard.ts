@@ -408,9 +408,9 @@ export class ConflictGuard implements CanActivate {
    * Check for conflict waiver
    */
   private checkWaiver(
-    waivers: string[],
-    matterId: string,
-    conflictType: ConflictType,
+    _waivers: string[],
+    _matterId: string,
+    _conflictType: ConflictType,
   ): string | null {
     // Placeholder: In production, fetch waiver details and verify validity
     // const waiver = await this.waiverService.findValidWaiver(waivers, matterId, conflictType);

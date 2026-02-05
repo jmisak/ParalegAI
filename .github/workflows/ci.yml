@@ -60,7 +60,9 @@ jobs:
         continue-on-error: true
 
       - name: Run build
-        run: pnpm build
+        run: |
+          set -o pipefail
+          pnpm build 2>&1 | tee build.log || (cat build.log && exit 1)
 
       - name: Run unit tests with coverage
         run: pnpm test:coverage
